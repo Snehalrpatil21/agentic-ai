@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask 10K</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Delius&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>ASK 10K</h1>
+        <form action="/query" method="post">
+            <label for="query">Ask about 10-K filings:</label>
+            <input type="text" id="query" name="query" placeholder="e.g. What is the cost of iPhone 15?" required>
+            <button type="submit">Send</button>
+        </form>
+
+        <div class="chat-window">
+            {% if history %}
+                {% for item in history | reverse %}
+                    <div class="chat-message user">
+                        <div class="message-label">You</div>
+                        <div class="message-text">{{ item.question }}</div>
+                    </div>
+                    <div class="chat-message assistant">
+                        <div class="message-label">Assistant</div>
+                        <div class="message-text">{{ item.answer }}</div>
+                        {% if item.sources %}
+                            <div class="message-sources">
+                                Sources: {% for source in item.sources %}{{ source.source }} ({{ source.page }}){% if not loop.last %}, {% endif %}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>Ask any question about the 10-K filings. The assistant will search the document content and answer like a chat.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+    <div id="loading" style="display: none;">
+        <div class="loading-content">
+            <h2>Processing your query...</h2>
+            <div class="spinner"></div>
+        </div>
+    </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', function() {
+            document.querySelector('.container').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
