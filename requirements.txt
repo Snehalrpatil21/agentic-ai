@@ -8,3 +8,5 @@ chromadb==0.5.0 # Vector storage
 openai==1.31.1 # For embeddings
 tiktoken==0.7.0  # For embeddings 
 flask==2.3.3 
+langgraph==0.1.1  # For graph-based agent workflows
+langgraph==0.1.1  # For graph-based agent workflows

@@ -184,3 +184,15 @@ button:hover {
     color: #007bff;
     
 }
+
+.action-trace {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.confidence {
+    font-size: 0.9em;
+    color: #007bff;
+    margin-top: 5px;
+}
