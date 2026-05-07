@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 import requests
 import os
 from sympy import sympify, SympifyError
+from serpapi import GoogleSearch
 
 CHROMA_PATH = "chroma"
 
@@ -30,12 +31,34 @@ class ChromaRetrieverTool(BaseTool):
 
 class WebLookupTool(BaseTool):
     name = "web_lookup"
-    description = "Perform a web search or SEC lookup for fresh information."
+    description = "Search Google for real-time web information."
 
     def _run(self, query: str) -> str:
-        # Placeholder for web search; integrate with a real API like SerpAPI or SEC EDGAR
-        # For now, return a mock response
-        return f"Mock web search result for '{query}': No real-time data available in this demo."
+        api_key = os.environ.get('SERPAPI_KEY')
+        if not api_key:
+            return "Error: SERPAPI_KEY not configured in .env file. Please add your SerpAPI key."
+        
+        try:
+            params = {
+                "q": query,
+                "api_key": api_key,
+                "num": 3
+            }
+            search = GoogleSearch(params)
+            results = search.get_dict()
+            
+            if "organic_results" in results:
+                output = f"Web search results for '{query}':\n\n"
+                for i, result in enumerate(results["organic_results"][:3], 1):
+                    title = result.get('title', 'No title')
+                    snippet = result.get('snippet', 'No snippet')
+                    link = result.get('link', 'No link')
+                    output += f"{i}. {title}\nSnippet: {snippet}\nLink: {link}\n\n"
+                return output
+            else:
+                return "No search results found."
+        except Exception as e:
+            return f"Error in web search: {str(e)}"
 
 class CalculatorTool(BaseTool):
     name = "calculator"

@@ -10,3 +10,4 @@ tiktoken==0.7.0  # For embeddings
 flask==2.3.3 
 langgraph==0.1.1  # For graph-based agent workflows
 sympy==1.12.0  # For safe symbolic math calculations
+google-search-results==2.4.2  # For SerpAPI web search
