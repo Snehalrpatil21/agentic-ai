@@ -5,6 +5,7 @@ from langchain.prompts import ChatPromptTemplate
 from typing import List, Dict, Any
 import requests
 import os
+from sympy import sympify, SympifyError
 
 CHROMA_PATH = "chroma"
 
@@ -42,10 +43,9 @@ class CalculatorTool(BaseTool):
 
     def _run(self, expression: str) -> str:
         try:
-            # Use eval for simple calculations; in production, use a safer library
-            result = eval(expression)
+            result = sympify(expression)
             return str(result)
-        except Exception as e:
+        except SympifyError as e:
             return f"Error in calculation: {str(e)}"
 
 class SummarizerTool(BaseTool):

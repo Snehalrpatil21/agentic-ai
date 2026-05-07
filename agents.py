@@ -35,7 +35,13 @@ model = ChatOpenAI(model_name="gpt-4", temperature=0, openai_api_key=openai_api_
 def query_intent_node(state: AgentState) -> AgentState:
     query = state["query"]
     history = state["history"]
-    prompt = f"Classify the intent of this query: '{query}'. History: {history}. Options: document_lookup, numeric_analysis, external_search, clarification_needed."
+    history_text = "\n".join([f"Q: {item['question']}\nA: {item['answer']}" for item in history]) if history else "No previous history."
+    prompt = (
+        f"Classify the intent of this query using the conversation history and current question. "
+        f"History:\n{history_text}\n\n"
+        f"Current question: '{query}'.\n"
+        f"Options: document_lookup, numeric_analysis, external_search, clarification_needed."
+    )
     intent = model.predict(prompt).strip().lower()
     state["intent"] = intent
     state["action_trace"].append(f"Classified intent as: {intent}")
@@ -43,7 +49,18 @@ def query_intent_node(state: AgentState) -> AgentState:
 
 def retriever_node(state: AgentState) -> AgentState:
     query = state["query"]
-    docs = retriever_tool._run(query)
+    history = state["history"]
+    if history:
+        history_text = "\n".join([f"Q: {item['question']}\nA: {item['answer']}" for item in history])
+        retrieval_query = (
+            f"Use the following conversation history and current question to find the most relevant documents. "
+            f"History:\n{history_text}\n\n"
+            f"Current question: {query}"
+        )
+    else:
+        retrieval_query = query
+
+    docs = retriever_tool._run(retrieval_query)
     state["retrieved_docs"] = docs
     state["action_trace"].append(f"Retrieved {len(docs)} document chunks")
     return state
@@ -63,8 +80,17 @@ def tool_selector_node(state: AgentState) -> AgentState:
 def synthesis_node(state: AgentState) -> AgentState:
     docs = state["retrieved_docs"]
     tool_outputs = state["tool_outputs"]
+    history = state["history"]
     context = "\n".join([doc["content"] for doc in docs])
-    prompt = f"Synthesize an answer based on context: {context} and tools: {tool_outputs}. Query: {state['query']}"
+    history_text = "\n".join([f"Q: {item['question']}\nA: {item['answer']}" for item in history]) if history else "No previous history."
+    prompt = (
+        f"Synthesize an answer using the conversation history, retrieved context, and any tool outputs.\n\n"
+        f"History:\n{history_text}\n\n"
+        f"Context:\n{context if context else 'No documents retrieved.'}\n\n"
+        f"Tool outputs: {tool_outputs}\n\n"
+        f"Current question: {state['query']}\n\n"
+        "Answer in a concise and accurate way, and cite sources only from the provided context."
+    )
     answer = model.predict(prompt)
     state["answer"] = answer
     state["sources"] = [doc["metadata"] for doc in docs]
